@@ -350,4 +350,19 @@ MigrationBackup/
 .ionide/
 
 # My settings
+#-------------
 .idea/
+# from https://github.com/DeborahK/Angular-GettingStarted/blob/master/.gitignore
+typings
+**/app/**/*.js
+**/app/**/*.map
+node_modules
+jspm_packages
+bower_components
+
+.vs
+**/*.sou
+**/*.user
+bin
+obj
+packages

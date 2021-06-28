@@ -1,59 +1,59 @@
-import { Component, OnInit } from "@angular/core";
-import { IProduct } from "./product";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { IProduct } from './product';
+import { ProductService } from './product.service';
 
 @Component({
-  selector: 'pm-products',
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
-export class ProductListComponent implements OnInit {
-  pageTitle: string = 'Product List';
-  imageWidth: number = 50;
-  imageMargin: number = 2;
-  private _listFilter: string = '';
+export class ProductListComponent implements OnInit, OnDestroy {
+  pageTitle = 'Product List';
+  imageWidth = 50;
+  imageMargin = 2;
+  showImage = false;
+  errorMessage = '';
+  sub!: Subscription;
+
+  private _listFilter = '';
   get listFilter(): string {
     return this._listFilter;
   }
   set listFilter(value: string) {
     this._listFilter = value;
-    this.filteredProducts = this.performFilter();
+    this.filteredProducts = this.performFilter(value);
   }
 
   filteredProducts: IProduct[] = [];
-  products: IProduct[] = [
-    {
-      "productId": 2,
-      "productName": "Garden Cart",
-      "productCode": "GDN-0023",
-      "releaseDate": "March 18, 2021",
-      "description": "15 gallon capacity rolling garden cart",
-      "price": 32.99,
-      "starRating": 4.2,
-      "imageUrl": "assets/images/garden_cart.png"
-    },
-    {
-      "productId": 5,
-      "productName": "Hammer",
-      "productCode": "TBX-0048",
-      "releaseDate": "May 21, 2021",
-      "description": "Curved claw steel hammer",
-      "price": 8.9,
-      "starRating": 4.8,
-      "imageUrl": "assets/images/hammer.png"
-    }
-  ];
+  products: IProduct[] = [];
 
-  performFilter(): IProduct[] {
-    return this.products.filter((product: IProduct) => (product.productName.toUpperCase()).includes(this.listFilter.toUpperCase()));
+  constructor(private productService: ProductService) {}
+
+  performFilter(filterBy: string): IProduct[] {
+    filterBy = filterBy.toLocaleLowerCase();
+    return this.products.filter((product: IProduct) =>
+      product.productName.toLocaleLowerCase().includes(filterBy));
   }
 
-  showImage: boolean = false;
-
-  ngOnInit(): void {
-    this.listFilter = 'cart';
-  }
-
-  toggleImage(): void { 
+  toggleImage(): void {
     this.showImage = !this.showImage;
   }
-} 
+
+  ngOnInit(): void {
+    this.sub = this.productService.getProducts().subscribe({
+      next: products => {
+        this.products = products;
+        this.filteredProducts = this.products;
+      },
+      error: err => this.errorMessage = err
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sub.unsubscribe();
+  }
+
+  onRatingClicked(message: string): void {
+    this.pageTitle = 'Product List: ' + message;
+  }
+}
